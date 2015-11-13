@@ -1,0 +1,79 @@
+{{set . "title" "Telepresence Robot"}}
+
+{{template "header.html" .}}
+
+<div id="container">
+	<header style="background-color:#FF3333; height: 10px; width: 10px; margin: 5px;" id="device_status">
+	</header>
+	<header style="background-color:#FFFFFF; height: 10px; width: 10px; margin: 5px" id="server_status">
+	</header>
+	
+	<div class="container">
+	  <div class="row">
+	    <div class="span6">
+	      {{template "flash.html" .}}
+	    </div>
+	  </div>
+	</div>
+	
+	<p>Enter commands one per line. Each command consists of three parameters separated by a space. The first parameter is the 3 digit signed left motor speed ranging from -255 to +255. The second parameter is the 3 digit signed right motor speed ranging from -255 to +255. The last parameter is the duration of the command in milliseconds.</p>
+	
+	<textarea id="commandset" rows="20">+000 +000 1000</textarea>
+	<button id="submitButton">Execute</button>
+</div>
+
+<script>
+	$("#submitButton").click(function(evt){
+		$.ajax({
+			url: '/app/ExecuteProgram',
+			type: "POST",
+			data: {"commandset" : $("#commandset").val()},
+			success: function(data, textStatus, jqXHR) {
+				alert(data['Body']);
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				alert("Unexpected Error!");
+			}
+		});
+	});
+
+	function checkDeviceStatus() {
+		$.ajax({
+			url: '/app/Status',
+			type: "GET",
+			success: function(data, textStatus, jqXHR) {
+				if ( 'connected' == data['Body']) {
+					$("#device_status").css('background-color','#A9F16C');
+				} else {
+					$("#device_status").css('background-color','#FF3333');
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$("#device_status").css('background-color','#9933FF');
+			}
+		});
+	}
+
+	$.ajax({
+		url: '/app/Listen',
+		type: "POST",
+		success: function(data, textStatus, jqXHR) {
+			if ( 'listening' == data['Body']) {
+				$("#server_status").css('background-color','#FFFF00');
+			} else {
+				$("#server_status").css('background-color','#FFFFFF');
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			$("#server_status").css('background-color','#9933FF');
+		}
+	});
+
+	checkDeviceStatus();
+	
+	//Check again every 10 seconds
+	setInterval(checkDeviceStatus,10000);
+	
+</script>
+
+{{template "footer.html" .}}

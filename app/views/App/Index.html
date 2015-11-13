@@ -1,0 +1,106 @@
+{{set . "title" "Telepresence Robot"}}
+{{append . "moreScripts" "js/virtualjoystick.js"}}
+{{append . "moreStyles" "css/style.css"}}
+
+
+{{template "header.html" .}}
+
+<div id="container">
+	<header style="background-color:#FF3333; height: 10px; width: 10px; margin: 5px;" id="device_status">
+	</header>
+	<header style="background-color:#FFFFFF; height: 10px; width: 10px; margin: 5px" id="server_status">
+	</header>
+	
+	<div class="container">
+	  <div class="row">
+	    <div class="span6">
+	      {{template "flash.html" .}}
+	    </div>
+	  </div>
+	</div>
+</div>
+
+<div id="info">
+	<a href="http://learningthreejs.com/blog/2011/12/26/let-s-make-a-3d-game-virtual-joystick/" target="_blank">VirtualJoystick.js</a>
+	<span id="result"></span>
+</div> 
+<script>
+	function checkDeviceStatus() {
+		$.ajax({
+			url: '/app/Status',
+			type: "GET",
+			success: function(data, textStatus, jqXHR) {
+				if ( 'connected' == data['Body']) {
+					$("#device_status").css('background-color','#A9F16C');
+				} else {
+					$("#device_status").css('background-color','#FF3333');
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$("#device_status").css('background-color','#9933FF');
+			}
+		});
+	}
+
+	$.ajax({
+		url: '/app/Listen',
+		type: "POST",
+		success: function(data, textStatus, jqXHR) {
+			if ( 'listening' == data['Body']) {
+				$("#server_status").css('background-color','#FFFF00');
+			} else {
+				$("#server_status").css('background-color','#FFFFFF');
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			$("#server_status").css('background-color','#9933FF');
+		}
+	});
+
+	checkDeviceStatus();
+	
+	//Check again every 10 seconds
+	setInterval(checkDeviceStatus,10000);
+
+	var SAMPLES_PER_SECOND = 5;
+	var STICK_RADIUS = 100;
+	var SENSITIVITY = 1;
+	var lastDx = 0;
+	var lastDy = 0;
+	var posting = false;
+	var connected = false;
+	
+	var joystick	= new VirtualJoystick({
+		container	: document.getElementById('container'),
+		mouseSupport	: true,
+		stickRadius : STICK_RADIUS,
+		limitStickTravel: true
+	});
+	window.joystick = joystick;
+	
+	setInterval(function(){
+		var outputEl	= document.getElementById('result');
+
+		var deltaX = Math.round(joystick.deltaX() / STICK_RADIUS * 255);
+		var deltaY = Math.round(joystick.deltaY() / STICK_RADIUS * 255);
+
+		outputEl.innerHTML = '<b>Result:</b> ' + Math.round(joystick.deltaX() / STICK_RADIUS * 255) + ' ' + Math.round(joystick.deltaY() / STICK_RADIUS * 255);
+
+		lastDx = deltaX;
+		lastDy = deltaY;
+		
+		if ( !posting ) {
+			posting = true;
+			$.ajax({
+				url: '/app/Move',
+				type: "POST",
+				dataType: "json",
+				data: {"dx" : Math.round(joystick.deltaX() / STICK_RADIUS * 255), "dy" : Math.round(joystick.deltaY() / STICK_RADIUS * 255)},
+				success: function(data, textStatus, jqXHR) { posting = false; },
+				error: function(jqXHR, textStatus, errorThrown) { posting = false; }
+			})
+		}
+	}, 1/SAMPLES_PER_SECOND * 1000);
+</script>
+
+{{template "footer.html" .}}

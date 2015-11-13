@@ -1,0 +1,5 @@
+{
+"DeviceId" : "ParticleDeviceId",
+"AccessToken" : "ParticleAccessToken",
+"MotionServerPort" : "8484"
+}
