@@ -43,15 +43,11 @@
 	checkDeviceStatus();
 	
 	//Check again every 10 seconds
-	setInterval(checkDeviceStatus,10000);
+	setInterval(checkDeviceStatus,10 * 1000);
 
 	var SAMPLES_PER_SECOND = 5;
-	var STICK_RADIUS = 100;
-	var SENSITIVITY = 1;
-	var lastDx = 0;
-	var lastDy = 0;
+	var STICK_RADIUS = 200;
 	var posting = false;
-	var connected = false;
 	
 	var joystick	= new VirtualJoystick({
 		container	: document.getElementById('container'),
@@ -62,23 +58,19 @@
 	window.joystick = joystick;
 	
 	setInterval(function(){
-		var outputEl	= document.getElementById('result');
-
 		var deltaX = Math.round(joystick.deltaX() / STICK_RADIUS * 255);
 		var deltaY = Math.round(joystick.deltaY() / STICK_RADIUS * 255);
 
-		outputEl.innerHTML = '<b>Result:</b> ' + Math.round(joystick.deltaX() / STICK_RADIUS * 255) + ' ' + Math.round(joystick.deltaY() / STICK_RADIUS * 255);
+		var outputEl	= document.getElementById('result');
+		outputEl.innerHTML = '<b>Result:</b> ' + deltaX + ' ' + deltaY;
 
-		lastDx = deltaX;
-		lastDy = deltaY;
-		
 		if ( !posting ) {
 			posting = true;
 			$.ajax({
 				url: '/app/Move',
 				type: "POST",
 				dataType: "json",
-				data: {"dx" : Math.round(joystick.deltaX() / STICK_RADIUS * 255), "dy" : Math.round(joystick.deltaY() / STICK_RADIUS * 255)},
+				data: {"dx" : deltaX, "dy" : deltaY},
 				success: function(data, textStatus, jqXHR) { posting = false; },
 				error: function(jqXHR, textStatus, errorThrown) { posting = false; }
 			})
