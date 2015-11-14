@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/user"
+	"strings"
+	"time"
 )
 
 //App configuration
@@ -63,6 +65,62 @@ func init() {
 		fmt.Println("error:", err)
 		return
 	}
+
+	revel.OnAppStart(initMotionServer)
+}
+
+func initMotionServer() {
+	go startMotionServer()
+}
+
+//Start the motion command server
+func startMotionServer() {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%s",Config.MotionServerPort))
+	if err != nil {
+	    fmt.Println("Error creating listener:", err.Error())
+	    return
+	}
+
+	fmt.Println(fmt.Sprintf("Motion command server listening on %s",Config.MotionServerPort))
+
+	Listener = ln
+
+	defer ln.Close()
+
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+	        fmt.Println("Error accepting: ", err.Error())
+	        return
+		}
+		go handleConnection(conn)
+	}
+}
+
+// Handle connection requests to the server
+func handleConnection(conn net.Conn) {
+	buf := make([]byte, 128)
+
+	for {
+		if Dirty {	//Only send updates
+			conn.Write([]byte(State))
+
+			reqLen, err := conn.Read(buf)
+
+			if err != nil {
+				fmt.Println("Error reading:", err.Error())
+			} else {
+				ackStr := string(buf[0:reqLen])
+				if strings.Contains(ackStr, "ACK") {
+					Dirty = false
+				}
+			}
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// Close the connection when you're done with it.
+	conn.Close()
 }
 
 // TODO turn this into revel.HeaderFilter

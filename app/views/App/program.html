@@ -5,8 +5,6 @@
 <div id="container">
 	<header style="background-color:#FF3333; height: 10px; width: 10px; margin: 5px;" id="device_status">
 	</header>
-	<header style="background-color:#FFFFFF; height: 10px; width: 10px; margin: 5px" id="server_status">
-	</header>
 	
 	<div class="container">
 	  <div class="row">
@@ -53,21 +51,6 @@
 			}
 		});
 	}
-
-	$.ajax({
-		url: '/app/Listen',
-		type: "POST",
-		success: function(data, textStatus, jqXHR) {
-			if ( 'listening' == data['Body']) {
-				$("#server_status").css('background-color','#FFFF00');
-			} else {
-				$("#server_status").css('background-color','#FFFFFF');
-			}
-		},
-		error: function(jqXHR, textStatus, errorThrown) {
-			$("#server_status").css('background-color','#9933FF');
-		}
-	});
 
 	checkDeviceStatus();
 	

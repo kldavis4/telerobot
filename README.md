@@ -12,7 +12,7 @@ Copy `telerobot_conf.json.sample` to `~/.telerobot_conf.json` and update with th
 
 ### Go to http://localhost:9000/
 
-This page allows control via the virtual joystick. There are two status indicators at the top left. The top indicator is the device status (green = connected, red = not connected). The bottom indicator shows the motion command server status (yellow = running).
+This page allows control via the virtual joystick. There is a device status indicator at the top left (green = connected, red = not connected, purple = web application error).
 
 ### Got to http://localhost:9000/program
 

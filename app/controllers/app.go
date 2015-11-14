@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"math"
 	"strings"
-	"net"
 	"time"
 	"github.com/kldavis4/telerobot/app"
 )
@@ -97,12 +96,6 @@ func (c App) Status() revel.Result {
 	}	
 }
 
-//Start the motion command server (if not already started)
-func (c App) Listen() revel.Result {
-	go StartServer()
-	return c.RenderJson(ApiResponse{200,"Success","listening"})
-}
-
 //Parse the joystick.js dx / dy into a format that that robot can use
 func formatJoystickMotion(dx int, dy int) string {
 	rightMagnitude := -float64(dy)
@@ -137,58 +130,4 @@ func executeCommands(commands []string) {
 		fmt.Println(app.State)
 	}
 	app.ProgramExecuting = false
-}
-
-//Start the motion command server
-func StartServer() {
-	if app.Listener != nil {
-		return
-	}
-
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%s",app.Config.MotionServerPort))
-	if err != nil {
-	    fmt.Println("Error creating listener:", err.Error())
-	    return
-	}
-	
-	fmt.Println(fmt.Sprintf("Motion command server listening on %s",app.Config.MotionServerPort))
-	
-	app.Listener = ln
-	
-	defer ln.Close()
-	
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-	        fmt.Println("Error accepting: ", err.Error())
-	        return
-		}
-		go handleConnection(conn)
-	}
-}
-
-// Handle connection requests to the server
-func handleConnection(conn net.Conn) {
-	buf := make([]byte, 128)
-	
-	for {
-		if app.Dirty {	//Only send updates
-			conn.Write([]byte(app.State))
-			
-			reqLen, err := conn.Read(buf)
-			
-			if err != nil {
-				fmt.Println("Error reading:", err.Error())
-			} else {
-				ackStr := string(buf[0:reqLen])				
-				if strings.Contains(ackStr, "ACK") {
-					app.Dirty = false
-				}
-			}
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	
-	// Close the connection when you're done with it.
-	conn.Close()
 }
