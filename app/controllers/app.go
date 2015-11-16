@@ -100,11 +100,11 @@ func (c App) Status() revel.Result {
 func formatJoystickMotion(dx int, dy int) string {
 	rightMagnitude := -float64(dy)
 	leftMagnitude := -float64(dy)
-	
+
 	//Set a deadzone between -15 and +15 to make driving straight easier
 	if dx > 15 {
 		leftMagnitude = leftMagnitude * (1.0 - float64(dx) / 255.0)
-	} else if dx < 15 {
+	} else if dx < -15 {
 		rightMagnitude = rightMagnitude * (1.0 + float64(dx) / 255.0)
 	}
 	
