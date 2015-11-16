@@ -41,7 +41,7 @@ case "$1" in
   export GOROOT="$GOROOT"
   export GOPATH="$GOPATH"
   export PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
-        /bin/su -m -l $USER -c "$GO_CMD" > "$WORKDIR/$NAME.log" 2>&1 &
+        /bin/su -m -l $USER -c "export GOROOT='$GOROOT';export GOPATH='$GOPATH';export PATH='$PATH';$GO_CMD" > "$WORKDIR/$NAME.log" 2>&1 &
         PID=$!
         echo $PID > "$WORKDIR/$NAME.pid"
         echo "Started with pid $PID - Logging to $WORKDIR/$NAME.log" && exit 0
